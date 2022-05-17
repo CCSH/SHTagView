@@ -6,7 +6,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "SHTagViewModel.h"
+#import "SHTagView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,16 +15,16 @@ NS_ASSUME_NONNULL_BEGIN
 //数据源
 @property (nonatomic, strong) SHTagViewModel *data;
 
+//添加图片
+@property (nonatomic, strong) SHTagView *tagView;
+
+
 //是否可以编辑
 @property (nonatomic, assign) BOOL canEdit;
-//是否编辑
-@property (nonatomic, assign) BOOL isEdit;
 //是否选中
 @property (nonatomic, assign) BOOL isSelect;
 //是否顶部
 @property (nonatomic, assign) BOOL isTop;
-//添加图片
-@property (nonatomic, strong) UIImage *addImg;
 
 @end
 

@@ -9,53 +9,65 @@
 #import "SHTagViewCollectionViewCell.h"
 #import "UIView+SHExtension.h"
 
-@interface SHTagView ()<
+@interface SHTagView () <
 UICollectionViewDelegate,
 UICollectionViewDataSource,
-UICollectionViewDelegateFlowLayout>
+UICollectionViewDelegateFlowLayout,
+UIGestureRecognizerDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 
+@property (nonatomic, strong) UILongPressGestureRecognizer *longGesture;
+@property (nonatomic, strong) UIPanGestureRecognizer *panGesture;
+//选中cell的NSIndexPath
+@property (nonatomic, strong) NSIndexPath *indexPath;
+@property (nonatomic, assign) CGPoint currentPoint;
+@property (strong, nonatomic) UIView *currentView;
 
 @end
 
 @implementation SHTagView
 
-- (instancetype)initWithFrame:(CGRect)frame
-{
+- (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.space = 15;
-        self.lineSpace = 10;
+        self.closeWH = 15;
+        self.space = 15 - self.closeWH / 2;
+        self.lineSpace = 10 - self.closeWH / 2;
         self.column = 4;
-        self.tagH = 35;
+        self.tagH = 35 + self.closeWH / 2;
+        self.selectColor = [UIColor orangeColor];
         
-        UILabel *head = [[UILabel alloc]init];
+        UILabel *head = [[UILabel alloc] init];
         head.frame = CGRectMake(10, 0, 200, 40);
         head.text = @"全部频道";
         self.sectionView = head;
         
-        NSString *path = [[NSBundle bundleWithPath:[self getBundle]] pathForResource:@"add@2x" ofType:@"png"];
+        NSBundle *bundle = [NSBundle bundleWithPath:[self getBundle]];
+        
+        NSString *path = [bundle pathForResource:@"add@2x" ofType:@"png"];
         self.addImg = [UIImage imageWithContentsOfFile:path];
+        
+        path = [bundle pathForResource:@"close@2x" ofType:@"png"];
+        self.closeImg = [UIImage imageWithContentsOfFile:path];
     }
     return self;
 }
 
-- (void)setFrame:(CGRect)frame{
+- (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
     self.collectionView.frame = self.bounds;
 }
 
 #pragma mark - 私有方法
 #pragma mark 获取Bundle路径
-- (NSString *)getBundle{
+- (NSString *)getBundle {
     return [[NSBundle bundleForClass:[self class]] pathForResource:@"SHTagView" ofType:@"bundle"];
 }
 
 #pragma mark 懒加载
-- (UICollectionView *)collectionView{
+- (UICollectionView *)collectionView {
     if (!_collectionView) {
-        
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
         flowLayout.sectionInset = UIEdgeInsetsZero;
         
@@ -67,26 +79,86 @@ UICollectionViewDelegateFlowLayout>
         [_collectionView registerClass:[SHTagViewCollectionViewCell class] forCellWithReuseIdentifier:@"SHTagViewCollectionViewCell"];
         [_collectionView registerClass:[UICollectionReusableView class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:UICollectionElementKindSectionHeader];
         [self addSubview:_collectionView];
+        
+        [self.collectionView addGestureRecognizer:self.longGesture];
+        [self.collectionView addGestureRecognizer:self.panGesture];
     }
     return _collectionView;
 }
 
+- (UILongPressGestureRecognizer *)longGesture {
+    if (!_longGesture) {
+        _longGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longAction:)];
+        _longGesture.delegate = self;
+    }
+    return _longGesture;
+}
+
+- (UIPanGestureRecognizer *)panGesture {
+    if (!_panGesture) {
+        _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panAction:)];
+        _panGesture.delegate = self;
+    }
+    return _panGesture;
+}
+
+#pragma mark - UICollectionViewDelegateFlowLayout
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    SHTagViewModel *data;
+    @try {
+        if (indexPath.section == 0) {
+            data = self.selectArr[indexPath.row];
+        } else {
+            data = self.unSelectArr[indexPath.row];
+        }
+    } @catch (NSException *exception) {
+    } @finally {
+    }
+    
+    CGFloat tagW = data.tagW;
+    if (tagW <= 0) {
+        tagW = (CGRectGetWidth(collectionView.frame) - self.space * (self.column + 1)) / self.column;
+    }
+    return CGSizeMake(tagW, self.tagH);
+}
+
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section {
+    return self.lineSpace;
+}
+
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section {
+    return self.space;
+}
+
+- (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section {
+    return UIEdgeInsetsMake(self.lineSpace, self.space, self.lineSpace, self.space);
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section {
+    if (section == 1) {
+        return self.sectionView.size;
+    }
+    return CGSizeZero;
+}
+
 #pragma mark - UICollectionViewDelegate
-- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView{
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
     return 2;
 }
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     if (section == 0) {
         return self.selectArr.count;
     }
     return self.unSelectArr.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     SHTagViewCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"SHTagViewCollectionViewCell" forIndexPath:indexPath];
+    cell.tagView = self;
+    
     cell.isTop = NO;
-    cell.isEdit = self.isEdit;
+    cell.isSelect = NO;
     SHTagViewModel *data;
     if (indexPath.section == 0) {
         data = self.selectArr[indexPath.row];
@@ -95,15 +167,18 @@ UICollectionViewDelegateFlowLayout>
         if (indexPath.row > self.editIndex) {
             cell.canEdit = YES;
         }
-    }else{
+        if (indexPath.row == self.currentIndex) {
+            cell.isSelect = YES;
+        }
+    } else {
         data = self.unSelectArr[indexPath.row];
     }
-    cell.addImg = self.addImg;
     cell.data = data;
+    
     return cell;
 }
 
-- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath{
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath {
     if ([kind isEqualToString:UICollectionElementKindSectionHeader]) {
         UICollectionReusableView *headerView = [collectionView dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:kind forIndexPath:indexPath];
         
@@ -116,45 +191,219 @@ UICollectionViewDelegateFlowLayout>
     return nil;
 }
 
-#pragma mark - UICollectionViewDelegateFlowLayout
-- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
-    SHTagViewModel *data;
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    //点击标签逻辑
     if (indexPath.section == 0) {
-        data = self.selectArr[indexPath.row];
-    }else{
-        data = self.unSelectArr[indexPath.row];
+        if (self.isEdit) {
+            //编辑点击 删除
+            if (indexPath.row <= self.editIndex) {
+                //不可编辑
+                return;
+            }
+            SHTagViewModel *data = self.selectArr[indexPath.row];
+            [self.selectArr removeObjectAtIndex:indexPath.row];
+            [self.unSelectArr addObject:data];
+            
+            if (indexPath.row < self.currentIndex) {
+                //删除前面的
+                self.currentIndex--;
+            }
+            
+            //动画
+            [collectionView
+             performBatchUpdates:^{
+                [collectionView moveItemAtIndexPath:indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+            }
+             completion:^(BOOL finished) {
+                [collectionView reloadData];
+            }];
+            
+        } else {
+            //非编辑点击 选中
+            self.currentIndex = indexPath.row;
+            [collectionView reloadData];
+        }
+    } else {
+        SHTagViewModel *data = self.unSelectArr[indexPath.row];
+        [self.selectArr addObject:data];
+        [self.unSelectArr removeObjectAtIndex:indexPath.row];
+        
+        //选中最后一个
+        self.currentIndex = self.selectArr.count - 1;
+        
+        //动画
+        [collectionView
+         performBatchUpdates:^{
+            [collectionView moveItemAtIndexPath:indexPath toIndexPath:[NSIndexPath indexPathForItem:self.selectArr.count - 1 inSection:0]];
+        }
+         completion:^(BOOL finished) {
+            [collectionView reloadData];
+        }];
     }
-    CGFloat tagW = data.tagW;
-    if (tagW <= 0) {
-        tagW = (CGRectGetWidth(collectionView.frame) - self.space*(self.column + 1))/self.column;
+}
+
+#pragma mark - UIGestureRecognizerDelegate
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    CGPoint location = [gestureRecognizer locationInView:gestureRecognizer.view];
+    //取出操作的 indexPath
+    NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
+    if (indexPath) {
+        //手势生效(编辑状态、第一组、可编辑)
+        BOOL gesture = (self.isEdit && indexPath.section == 0 && indexPath.row > self.editIndex);
+        
+        //拖拽
+        if (gestureRecognizer == self.panGesture) {
+            if (indexPath) {
+                if (gesture) {
+                    self.indexPath = indexPath;
+                    return YES;
+                }
+            }
+            return NO;
+        }
+        
+        //长按
+        if (gestureRecognizer == self.longGesture) {
+            if (!(self.isEdit && indexPath.section == 0)) {
+                return YES;
+            }
+            return NO;
+        }
     }
-    return CGSizeMake(tagW, self.tagH);
+    return YES;
 }
 
-- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section{
-    return self.lineSpace;
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
 }
 
-- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section{
-    return self.space;
-}
-
-- (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
-    return UIEdgeInsetsMake(self.lineSpace, self.space, self.lineSpace, self.space);
-}
-
-- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section{
-    if (section == 1) {
-        return self.sectionView.size;
+#pragma mark - 手势
+#pragma mark 长按
+- (void)longAction:(UILongPressGestureRecognizer *)press {
+    switch (press.state) {
+        case UIGestureRecognizerStateBegan: {
+            //开启编辑
+            self.isEdit = YES;
+        } break;
+        default:
+            break;
     }
-    return CGSizeZero;
+}
+
+#pragma mark 拖拽
+- (void)panAction:(UIPanGestureRecognizer *)press {
+    //拖拽标签逻辑
+    CGPoint location = [press locationInView:self.collectionView];
+    switch (press.state) {
+        case UIGestureRecognizerStateBegan: {
+            [self preparePan:location];
+        } break;
+        case UIGestureRecognizerStateChanged: {
+            //设置位置
+            self.currentView.x = location.x - self.currentPoint.x;
+            self.currentView.y = location.y - self.currentPoint.y;
+            
+            //获取要替换的位置
+            NSIndexPath *new = [ self.collectionView indexPathForItemAtPoint : location ];
+            if (!new) {
+                break;
+            }
+            
+            if (new.section == 0) {
+                //可编辑
+                if (new.row > self.editIndex) {
+                    //编辑数据源
+                    NSMutableArray *temp = [self.selectArr mutableCopy];
+                    if (new.row > self.indexPath.row) {
+                        //替换位置 比 编辑的大(移动到后面)
+                        for (NSInteger index = self.indexPath.row; index < new.row; index++) {
+                            //交换元素
+                            [temp exchangeObjectAtIndex:index withObjectAtIndex:index + 1];
+                        }
+                    }
+                    if (new.row < self.indexPath.row) {
+                        //替换位置 比 编辑的小(移动到前面)
+                        for (NSInteger index = self.indexPath.row; index > new.row; index--) {
+                            //交换元素
+                            [temp exchangeObjectAtIndex:index withObjectAtIndex:index - 1];
+                        }
+                    }
+                    
+                    //更新数据源
+                    self.selectArr = temp;
+                    //更新cell
+                    [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                    
+                    //新位置
+                    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:new];
+                    self.indexPath = new;
+                    cell.alpha = 0.f;
+                }
+            }
+            if (new.section == 1) {//拖拽到下方
+                //编辑数据源
+                //取出
+                SHTagViewModel *data = self.selectArr[self.indexPath.row];
+                //删除
+                [self.selectArr removeObjectAtIndex:self.indexPath.row];
+                //添加
+                [self.unSelectArr addObject:data];
+                
+                //选中位置
+                if (self.indexPath.row == self.currentIndex) {
+                    self.currentIndex = self.selectArr.count - 1;
+                }
+
+                //动画
+                [self.collectionView performBatchUpdates:^{
+                    [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+                } completion:^(BOOL finished) {
+                    [self.collectionView reloadData];
+                }];
+                press.state = UIGestureRecognizerStateEnded;
+            }
+        } break;
+        case UIGestureRecognizerStateEnded: {
+            self.indexPath = nil;
+            [self.currentView removeFromSuperview];
+            [self.collectionView reloadData];
+        } break;
+        default:
+            break;
+    }
+}
+
+#pragma mark 准备拖拽
+- (void)preparePan:(CGPoint)location {
+    [self.currentView removeFromSuperview];
+    //获取手指按住的cell
+    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:self.indexPath];
+    //截取当前cell截图
+    self.currentView = [cell snapshotViewAfterScreenUpdates:NO];
+    self.currentView.layer.maskedCorners = NO;
+    self.currentView.center = cell.center;
+    // 记录当前手指的位置的x和y距离cell的x,y的间距
+    self.currentPoint = CGPointMake(location.x - cell.frame.origin.x, location.y - cell.frame.origin.y);
+    // 放大截图
+    self.currentView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    // 添加截图到collectionView上
+    [self.collectionView addSubview:self.currentView];
+    // 隐藏当前cell
+    cell.alpha = 0.f;
 }
 
 #pragma mark - 公开方法
-- (void)reloadView{
+- (void)reloadView {
     [self layoutIfNeeded];
     [self.collectionView reloadData];
 }
 
-@end
+- (void)setIsEdit:(BOOL)isEdit {
+    _isEdit = isEdit;
+    [self.collectionView reloadData];
+    if (self.block) {
+        self.block(self);
+    }
+}
 
+@end
