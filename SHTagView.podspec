@@ -8,7 +8,9 @@ Pod::Spec.new do |s|
     s.requires_arc = true
     s.homepage     = "https://github.com/CCSH/SHTagView"
     s.source       = { :git => "https://github.com/CCSH/SHTagView.git", :tag => s.version }
-    s.source_files = "SHTagView/*.{h,m}"
+    
+    s.source_files = "#{s.name}/*.{h,m}"
+    s.resources = "#{s.name}/#{s.name}.bundle"
     
     s.dependency "SHExtension"
     s.dependency "Masonry"
