@@ -34,16 +34,17 @@ typedef void(^CallBack)(SHTagView *tag);
 #pragma mark 界面定制(待补充)
 //几列(默认4)
 @property (nonatomic, assign) NSInteger column;
+//拖拽比例(默认 1.2)
+@property (nonatomic, assign) CGFloat panScale;
 
-
+//关闭按钮宽高(默认 17)
+@property (nonatomic, assign) CGFloat closeWH;
 //高度(默认35 + closeWH/2)
 @property (nonatomic, assign) CGFloat tagH;
 //左右间隙(默认15 - closeWH/2)
 @property (nonatomic, assign) CGFloat space;
 //行间距(默认10 - closeWH/2)
 @property (nonatomic, assign) CGFloat lineSpace;
-//关闭按钮宽高(默认 15*15)
-@property (nonatomic, assign) CGFloat closeWH;
 
 //选中颜色(默认orangeColor)
 @property (nonatomic, assign) UIColor *selectColor;

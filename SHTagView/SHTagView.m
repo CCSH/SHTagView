@@ -31,12 +31,13 @@ UIGestureRecognizerDelegate>
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.closeWH = 15;
+        self.closeWH = 17;
         self.space = 15 - self.closeWH / 2;
         self.lineSpace = 10 - self.closeWH / 2;
         self.column = 4;
         self.tagH = 35 + self.closeWH / 2;
         self.selectColor = [UIColor orangeColor];
+        self.panScale = 1.2;
         
         UILabel *head = [[UILabel alloc] init];
         head.frame = CGRectMake(10, 0, 200, 40);
@@ -156,6 +157,10 @@ UIGestureRecognizerDelegate>
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     SHTagViewCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"SHTagViewCollectionViewCell" forIndexPath:indexPath];
     cell.tagView = self;
+    __weak __typeof__(self) weak_self = self;
+    cell.cellBack = ^{
+        [weak_self deleteAction:indexPath];
+    };
     
     cell.isTop = NO;
     cell.isSelect = NO;
@@ -174,7 +179,12 @@ UIGestureRecognizerDelegate>
         data = self.unSelectArr[indexPath.row];
     }
     cell.data = data;
-    
+    cell.contentView.alpha = 1;
+    if (self.indexPath && self.isEdit) {
+        if (self.indexPath == indexPath) {
+            cell.contentView.alpha = 0;
+        }
+    }
     return cell;
 }
 
@@ -185,7 +195,7 @@ UIGestureRecognizerDelegate>
         if (indexPath.section == 1) {
             [headerView addSubview:self.sectionView];
         }
-        
+
         return headerView;
     }
     return nil;
@@ -195,27 +205,13 @@ UIGestureRecognizerDelegate>
     //点击标签逻辑
     if (indexPath.section == 0) {
         if (self.isEdit) {
-            //编辑点击 删除
-            if (indexPath.row <= self.editIndex) {
-                //不可编辑
-                return;
-            }
-            SHTagViewModel *data = self.selectArr[indexPath.row];
-            [self.selectArr removeObjectAtIndex:indexPath.row];
-            [self.unSelectArr addObject:data];
-            
-            if (indexPath.row < self.currentIndex) {
-                //删除前面的
-                self.currentIndex--;
-            }
-            
-            //动画
-            [collectionView
-             performBatchUpdates:^{
-                [collectionView moveItemAtIndexPath:indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
-            }
-             completion:^(BOOL finished) {
-                [collectionView reloadData];
+            UICollectionViewCell *cell = [collectionView cellForItemAtIndexPath:indexPath];
+            //变大动画
+            [UIView animateWithDuration:0.2
+                             animations:^{
+                cell.transform = CGAffineTransformMakeScale(self.panScale, self.panScale);
+            } completion:^(BOOL finished) {
+                cell.transform = CGAffineTransformMakeScale(1, 1);
             }];
             
         } else {
@@ -304,7 +300,7 @@ UIGestureRecognizerDelegate>
             self.currentView.y = location.y - self.currentPoint.y;
             
             //获取要替换的位置
-            NSIndexPath *new = [ self.collectionView indexPathForItemAtPoint : location ];
+            NSIndexPath *new = [self.collectionView indexPathForItemAtPoint : location ];
             if (!new) {
                 break;
             }
@@ -331,13 +327,16 @@ UIGestureRecognizerDelegate>
                     
                     //更新数据源
                     self.selectArr = temp;
-                    //更新cell
-                    [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
-                    
+                    //动画
+                    [self.collectionView performBatchUpdates:^{
+                        [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                    } completion:^(BOOL finished) {
+                        [self.collectionView reloadData];
+                    }];
                     //新位置
                     UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:new];
-                    self.indexPath = new;
                     cell.alpha = 0.f;
+                    self.indexPath = new;
                 }
             }
             if (new.section == 1) {//拖拽到下方
@@ -385,13 +384,38 @@ UIGestureRecognizerDelegate>
     // 记录当前手指的位置的x和y距离cell的x,y的间距
     self.currentPoint = CGPointMake(location.x - cell.frame.origin.x, location.y - cell.frame.origin.y);
     // 放大截图
-    self.currentView.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    self.currentView.transform = CGAffineTransformMakeScale(self.panScale, self.panScale);
     // 添加截图到collectionView上
     [self.collectionView addSubview:self.currentView];
     // 隐藏当前cell
     cell.alpha = 0.f;
 }
 
+#pragma mark - 事件
+- (void)deleteAction:(NSIndexPath *)indexPath{
+    //编辑点击 删除
+    if (indexPath.row <= self.editIndex) {
+        //不可编辑
+        return;
+    }
+    SHTagViewModel *data = self.selectArr[indexPath.row];
+    [self.selectArr removeObjectAtIndex:indexPath.row];
+    [self.unSelectArr addObject:data];
+    
+    if (indexPath.row < self.currentIndex) {
+        //删除前面的
+        self.currentIndex--;
+    }
+    
+    //动画
+    [self.collectionView
+     performBatchUpdates:^{
+        [self.collectionView moveItemAtIndexPath:indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+    }
+     completion:^(BOOL finished) {
+        [self.collectionView reloadData];
+    }];
+}
 #pragma mark - 公开方法
 - (void)reloadView {
     [self layoutIfNeeded];

@@ -8,12 +8,10 @@
 #import "ViewController.h"
 #import "SHTagView.h"
 #import <UIView+SHExtension.h>
-#import <SHPopView.h>
 
 @interface ViewController ()
 
 @property (weak, nonatomic) IBOutlet UISwitch *switchBtn;
-@property (nonatomic, strong) SHPopView *popView;
 
 @property (nonatomic, strong) SHTagView *tagView;
 
@@ -61,11 +59,6 @@
             NSLog(@"未选中--%@",tag.unSelectArr);
             NSLog(@"选中位置--%ld",(long)tag.currentIndex);
         }
-
-//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"" message:[NSString stringWithFormat:@"当前选中位置%ld",(long)tag.index] preferredStyle:UIAlertControllerStyleAlert];
-//        UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:nil];
-//        [alert addAction:cancel];
-//        [self presentViewController:alert animated:YES completion:nil];
     };
     self.tagView = view;
     [bgView addSubview:view];

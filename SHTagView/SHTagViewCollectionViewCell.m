@@ -8,6 +8,8 @@
 #import "SHTagViewCollectionViewCell.h"
 #import "Masonry.h"
 #import "UIView+SHExtension.h"
+#import "UIButton+SHExtension.h"
+#import "UIColor+SHExtension.h"
 
 @interface SHTagViewCollectionViewCell ()
 
@@ -53,23 +55,31 @@
 }
 
 - (void)handleBtn{
-    UIColor *color = [[UIColor blackColor] colorWithAlphaComponent:0.15];
     
-    [self.contentBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [self.contentBtn drawDashedBorder:color lineWidth:1 cornerRadius:4 lineDashPattern:@[@(4)]];
+    //背景颜色
+    UIColor *color = [[UIColor blackColor] colorWithAlphaComponent:0.05];
+    //字体颜色
+    UIColor *textColor = [UIColor colorWithHexString:@"#2F2F2F"];
+    
+    [self.contentBtn setTitleColor:textColor forState:UIControlStateNormal];
+    [self.contentBtn drawDashedBorder:[UIColor colorWithHexString:@"#DCDCDC"] lineWidth:1 cornerRadius:4 lineDashPattern:@[@(4)]];
     [self.contentBtn setImage:self.tagView.addImg forState:UIControlStateNormal];
     [self.contentBtn setTitle:[NSString stringWithFormat:@" %@",self.data.name] forState:UIControlStateNormal];
     self.contentBtn.backgroundColor = [UIColor whiteColor];
     self.closeBtn.hidden = YES;
     
     if (self.isTop) {//顶部
-        self.contentBtn.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.05];
+
+        self.contentBtn.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.027];
+        [self.contentBtn setTitleColor:[UIColor colorWithHexString:@"#5F5F5F"] forState:UIControlStateNormal];
         [self.contentBtn drawDashedBorder:[UIColor clearColor] lineWidth:1 cornerRadius:4 lineDashPattern:@[@(4),@(0)]];
         [self.contentBtn setImage:nil forState:UIControlStateNormal];
         [self.contentBtn setTitle:[NSString stringWithFormat:@"%@",self.data.name] forState:UIControlStateNormal];
+        
         if (self.canEdit) {//可编辑
             self.closeBtn.hidden = !self.tagView.isEdit;
             self.contentBtn.backgroundColor = color;
+            [self.contentBtn setTitleColor:textColor forState:UIControlStateNormal];
         }
         
         if (self.isSelect) {//选中
@@ -98,11 +108,16 @@
 - (UIButton *)closeBtn{
     if (!_closeBtn) {
         _closeBtn = [[UIButton alloc]init];
-        _closeBtn.enabled = YES;
         [self.contentView addSubview:_closeBtn];
         
         [_closeBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.width.height.mas_equalTo(0);
+        }];
+        __weak __typeof__(self) weak_self = self;
+        [_closeBtn addClickBlock:^(UIButton * _Nonnull btn) {
+            if (weak_self.cellBack) {
+                weak_self.cellBack();
+            }
         }];
     }
     return _closeBtn;

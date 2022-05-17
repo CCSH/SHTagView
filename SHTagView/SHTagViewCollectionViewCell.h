@@ -12,6 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SHTagViewCollectionViewCell : UICollectionViewCell
 
+//回调
+typedef void(^CellBack)();
+
+//回调
+@property (nonatomic, copy) CellBack cellBack;
+
 //数据源
 @property (nonatomic, strong) SHTagViewModel *data;
 
