@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "SHTagView"
-    s.version      = "1.0.0"
+    s.version      = "1.0.1"
     s.summary      = "标签页编辑，仿微博"
     s.license      = "MIT"
     s.authors      = { "CCSH" => "624089195@qq.com" }
@@ -12,7 +12,9 @@ Pod::Spec.new do |s|
     s.source_files = "#{s.name}/*.{h,m}"
     s.resources = "#{s.name}/#{s.name}.bundle"
     
-    s.dependency "SHExtension"
+    s.dependency "SHExtension/UIButton"
+    s.dependency "SHExtension/UIColor"
+    s.dependency "SHExtension/UIView"
     s.dependency "Masonry"
     
 end
