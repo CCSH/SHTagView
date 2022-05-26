@@ -14,14 +14,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SHTagView : UIView
 
 //回调
-typedef void(^CallBack)(SHTagView *tag);
+typedef void(^SHTagViewBack)(SHTagView *tag);
 
 #pragma mark - 必传
 @property (nonatomic, strong) NSMutableArray <SHTagViewModel *>*selectArr;
 @property (nonatomic, strong) NSMutableArray <SHTagViewModel *>*unSelectArr;
 
 //回调
-@property (nonatomic, copy) CallBack block;
+@property (nonatomic, copy) SHTagViewBack block;
 //选中位置
 @property (nonatomic, assign) NSInteger currentIndex;
 
