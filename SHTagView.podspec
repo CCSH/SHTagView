@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name         = "SHTagView"
-    s.version      = "1.0.1"
+    s.version      = "1.1.0"
     s.summary      = "标签页编辑，仿微博"
     s.license      = "MIT"
     s.authors      = { "CCSH" => "624089195@qq.com" }

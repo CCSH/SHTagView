@@ -43,13 +43,15 @@
     for (int i = 0; i < 10; i++) {
         SHTagViewModel *model = [[SHTagViewModel alloc]init];
         model.name = [NSString stringWithFormat:@"标签2--%d",i];
+        model.tagW = 150;
         [unSelectArr addObject:model];
     }
-    
+//    
     SHTagView *view = [[SHTagView alloc]init];
     view.frame = CGRectMake(0, topLab.maxY, self.view.frame.size.width, 500);
     view.selectArr = selectArr;
     view.unSelectArr = unSelectArr;
+    view.alignment = SHLayoutAlignment_left;
     [view reloadView];
 
     view.block = ^(SHTagView * _Nonnull tag) {

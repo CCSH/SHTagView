@@ -9,7 +9,6 @@
 #import "Masonry.h"
 #import "UIView+SHExtension.h"
 #import "UIButton+SHExtension.h"
-#import "UIColor+SHExtension.h"
 
 @interface SHTagViewCollectionViewCell ()
 
@@ -34,7 +33,8 @@
         make.width.height.mas_equalTo(tagView.closeWH);
     }];
     [self.contentBtn mas_updateConstraints:^(MASConstraintMaker *make) {
-        make.left.top.mas_offset(tagView.closeWH/2);
+        make.top.mas_offset(tagView.closeWH/2);
+        make.right.mas_offset(-tagView.closeWH/2);
     }];
     [self handleBtn];
 }
@@ -56,32 +56,26 @@
 
 - (void)handleBtn{
     
-    //背景颜色
-    UIColor *color = [[UIColor blackColor] colorWithAlphaComponent:0.05];
-    //字体颜色
-    UIColor *textColor = [UIColor colorWithHexString:@"#2F2F2F"];
-    
-    [self.contentBtn setTitleColor:textColor forState:UIControlStateNormal];
-    [self.contentBtn drawDashedBorder:[UIColor colorWithHexString:@"#DCDCDC"] lineWidth:1 cornerRadius:4 lineDashPattern:@[@(4)]];
+    self.contentBtn.titleLabel.font = self.tagView.font;
+    [self.contentBtn setTitle:[NSString stringWithFormat:@"%@",self.data.name] forState:UIControlStateNormal];
+    //下方字体颜色
+    [self.contentBtn setTitleColor:self.tagView.downColor forState:UIControlStateNormal];
     [self.contentBtn setImage:self.tagView.addImg forState:UIControlStateNormal];
-    [self.contentBtn setTitle:[NSString stringWithFormat:@" %@",self.data.name] forState:UIControlStateNormal];
-    self.contentBtn.backgroundColor = [UIColor whiteColor];
+    self.contentBtn.backgroundColor = [UIColor clearColor];
+    self.contentBtn.layer.borderColor = self.contentBtn.titleLabel.textColor.CGColor;
+    [self.contentBtn imageDirection:SHButtonImageDirection_left space:self.tagView.addSpace];
     self.closeBtn.hidden = YES;
-    
-    if (self.isTop) {//顶部
-
-        self.contentBtn.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.027];
-        [self.contentBtn setTitleColor:[UIColor colorWithHexString:@"#5F5F5F"] forState:UIControlStateNormal];
-        [self.contentBtn drawDashedBorder:[UIColor clearColor] lineWidth:1 cornerRadius:4 lineDashPattern:@[@(4),@(0)]];
+    if (self.isTop) {
+        //上方字体颜色
+        [self.contentBtn setTitleColor:self.tagView.topColor forState:UIControlStateNormal];
         [self.contentBtn setImage:nil forState:UIControlStateNormal];
-        [self.contentBtn setTitle:[NSString stringWithFormat:@"%@",self.data.name] forState:UIControlStateNormal];
-        
+        self.contentBtn.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.027];
+        self.contentBtn.layer.borderColor = [UIColor clearColor].CGColor;
+        [self.contentBtn imageDirection:SHButtonImageDirection_left space:0];
         if (self.canEdit) {//可编辑
             self.closeBtn.hidden = !self.tagView.isEdit;
-            self.contentBtn.backgroundColor = color;
-            [self.contentBtn setTitleColor:textColor forState:UIControlStateNormal];
+            self.contentBtn.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.05];
         }
-        
         if (self.isSelect) {//选中
             [self.contentBtn setTitleColor:self.tagView.selectColor forState:UIControlStateNormal];
         }
@@ -92,14 +86,13 @@
 - (UIButton *)contentBtn{
     if (!_contentBtn) {
         _contentBtn = [[UIButton alloc]init];
-        _contentBtn.titleLabel.font = [UIFont systemFontOfSize:14];
-        _contentBtn.backgroundColor = [UIColor whiteColor];
+        _contentBtn.layer.borderWidth = 0.5;
+        _contentBtn.layer.cornerRadius = 4;
         _contentBtn.enabled = NO;
         [self.contentView addSubview:_contentBtn];
         
         [_contentBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.right.bottom.mas_offset(0);
-            make.left.top.mas_offset(0);
+            make.top.left.bottom.right.mas_offset(0);
         }];
     }
     return _contentBtn;
@@ -112,6 +105,7 @@
         
         [_closeBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.width.height.mas_equalTo(0);
+            make.top.right.mas_offset(0);
         }];
         __weak __typeof__(self) weak_self = self;
         [_closeBtn addClickBlock:^(UIButton * _Nonnull btn) {
