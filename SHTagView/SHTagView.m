@@ -9,6 +9,7 @@
 #import "SHTagViewCollectionViewCell.h"
 #import "UIView+SHExtension.h"
 #import "UIColor+SHExtension.h"
+#import "SHCollectionViewFlowLayout.h"
 
 @interface SHTagView () <
 UICollectionViewDelegate,

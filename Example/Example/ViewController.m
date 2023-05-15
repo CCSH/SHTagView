@@ -51,7 +51,6 @@
     view.frame = CGRectMake(0, topLab.maxY, self.view.frame.size.width, 500);
     view.selectArr = selectArr;
     view.unSelectArr = unSelectArr;
-    view.alignment = SHLayoutAlignment_left;
     [view reloadView];
 
     view.block = ^(SHTagView * _Nonnull tag) {
