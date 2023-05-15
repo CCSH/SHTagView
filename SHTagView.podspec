@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
     s.summary      = "标签页编辑，仿微博"
     s.license      = "MIT"
     s.authors      = { "CCSH" => "624089195@qq.com" }
-    s.platform     = :ios, "9.0"
+    s.platform     = :ios, "11.0"
     s.requires_arc = true
     s.homepage     = "https://github.com/CCSH/#{s.name}"
     s.source       = { :git => "https://github.com/CCSH/#{s.name}.git", :tag => s.version }

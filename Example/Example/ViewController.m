@@ -24,12 +24,12 @@
     // Do any additional setup after loading the view.
     
     UIView *bgView = [[UIView alloc]init];
-    bgView.frame = CGRectMake(0, 100, self.view.width, self.view.height - 100);
+    bgView.frame = CGRectMake(0, 50, self.view.width, 540);
 
     
     UILabel *topLab = [[UILabel alloc]init];
     topLab.text = @"我的频道";
-    topLab.frame = CGRectMake(10, 100, self.view.width - 2*10, 40);
+    topLab.frame = CGRectMake(10, 0, self.view.width - 2*10, 40);
     [bgView addSubview:topLab];
 
     NSMutableArray *selectArr = [[NSMutableArray alloc]init];
@@ -51,6 +51,7 @@
     view.frame = CGRectMake(0, topLab.maxY, self.view.frame.size.width, 500);
     view.selectArr = selectArr;
     view.unSelectArr = unSelectArr;
+    view.alignment = SHLayoutAlignment_left;
     [view reloadView];
 
     view.block = ^(SHTagView * _Nonnull tag) {

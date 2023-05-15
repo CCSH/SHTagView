@@ -78,7 +78,6 @@ UIGestureRecognizerDelegate>
 - (UICollectionView *)collectionView {
     if (!_collectionView) {
         SHCollectionViewFlowLayout *flowLayout = [[SHCollectionViewFlowLayout alloc] init];
-        
         _collectionView = [[UICollectionView alloc] initWithFrame:self.bounds collectionViewLayout:flowLayout];
         _collectionView.delegate = self;
         _collectionView.dataSource = self;
@@ -133,6 +132,14 @@ UIGestureRecognizerDelegate>
         return self.sectionView.size;
     }
     return CGSizeZero;
+}
+
+- (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
+    return UIEdgeInsetsMake(self.lineSpace - self.closeWH / 2, self.space, self.lineSpace, self.space - self.closeWH / 2);
+}
+
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section{
+    return self.space - self.closeWH / 2;
 }
 
 #pragma mark - UICollectionViewDelegate
@@ -256,7 +263,7 @@ UIGestureRecognizerDelegate>
             return NO;
         }
     }
-    return YES;
+    return NO;
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
@@ -285,6 +292,7 @@ UIGestureRecognizerDelegate>
             [self preparePan:location];
         } break;
         case UIGestureRecognizerStateChanged: {
+            
             // 设置位置
             self.currentView.x = location.x - self.currentPoint.x;
             self.currentView.y = location.y - self.currentPoint.y;
@@ -446,9 +454,6 @@ UIGestureRecognizerDelegate>
     // 布局
     SHCollectionViewFlowLayout *layout = (SHCollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
     layout.alignment = self.alignment;
-    layout.sectionInset = UIEdgeInsetsMake(self.lineSpace - self.closeWH / 2, self.space, self.lineSpace, self.space - self.closeWH / 2);
-    layout.minimumLineSpacing = self.lineSpace - self.closeWH / 2;
-    layout.minimumInteritemSpacing = self.space - self.closeWH / 2;
     // 刷新
     [self.collectionView reloadData];
 }
