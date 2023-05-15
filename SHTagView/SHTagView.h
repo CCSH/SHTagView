@@ -7,12 +7,7 @@
 
 #import <UIKit/UIKit.h>
 #import "SHTagViewModel.h"
-
-typedef enum : NSUInteger {
-    SHTagAlignment_left,
-    SHTagAlignment_center,
-    SHTagAlignment_right,
-} SHTagAlignment;
+#import "SHCollectionViewFlowLayout.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -37,7 +32,7 @@ typedef void(^SHTagViewBack)(SHTagView *tag);
 //编辑状态
 @property (nonatomic, assign) BOOL isEdit;
 //标签对齐方式
-@property (nonatomic, assign) SHTagAlignment alignment;
+@property (nonatomic, assign) SHLayoutAlignment alignment;
 
 #pragma mark 界面定制
 //一行几列(默认4 与tagW有冲突 优先tagW)

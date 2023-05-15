@@ -24,7 +24,7 @@
     // Do any additional setup after loading the view.
     
     UIView *bgView = [[UIView alloc]init];
-    bgView.frame = CGRectMake(0, 100, self.view.width, 540);
+    bgView.frame = CGRectMake(0, 100, self.view.width, self.view.height - 100);
 
     
     UILabel *topLab = [[UILabel alloc]init];
@@ -65,6 +65,7 @@
     [bgView addSubview:view];
     
     [self.view addSubview:bgView];
+    [self.view sendSubviewToBack:bgView];
 }
 
 - (IBAction)switchAction:(UISwitch *)sender {

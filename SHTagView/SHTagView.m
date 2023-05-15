@@ -7,9 +7,8 @@
 
 #import "SHTagView.h"
 #import "SHTagViewCollectionViewCell.h"
-#import "UIView+SHExtension.h"
 #import "UIColor+SHExtension.h"
-#import "SHCollectionViewFlowLayout.h"
+#import "UIView+SHExtension.h"
 
 @interface SHTagView () <
 UICollectionViewDelegate,
@@ -26,7 +25,7 @@ UIGestureRecognizerDelegate>
 @property (nonatomic, assign) CGPoint currentPoint;
 @property (nonatomic, strong) UIView *currentView;
 @property (nonatomic, copy) NSString *currentName;
-//移动中
+// 移动中
 @property (nonatomic, assign) BOOL isChanged;
 
 @end
@@ -119,14 +118,14 @@ UIGestureRecognizerDelegate>
     } else {
         data = self.unSelectArr[indexPath.row];
     }
-
+    
     CGFloat tagW = data.tagW;
     if (tagW <= 0) {
-        tagW = (collectionView.width -  (self.space + (self.space - self.closeWH/2) * self.column)) / self.column;
-    }else{
-        tagW += self.closeWH/2;
+        tagW = (collectionView.width - (self.space + (self.space - self.closeWH / 2) * self.column)) / self.column;
+    } else {
+        tagW += self.closeWH / 2;
     }
-    return CGSizeMake(tagW, self.tagH + self.closeWH/2);
+    return CGSizeMake(tagW, self.tagH + self.closeWH / 2);
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section {
@@ -242,11 +241,9 @@ UIGestureRecognizerDelegate>
         
         // 拖拽
         if (gestureRecognizer == self.panGesture) {
-            if (indexPath) {
-                if (gesture) {
-                    self.indexPath = indexPath;
-                    return YES;
-                }
+            if (gesture) {
+                self.indexPath = indexPath;
+                return YES;
             }
             return NO;
         }
@@ -297,11 +294,10 @@ UIGestureRecognizerDelegate>
             if (!new) {
                 return;
             }
-            //不可编辑直接返回
-            if(new.section == 0 && new.row < self.editIndex){
+            // 不可编辑直接返回
+            if (new.section == 0 && new.row < self.editIndex) {
                 return;
             }
-            self.isChanged = YES;
             switch (new.section) {
                 case 0: { // 交换顺序
                     // 可编辑
@@ -331,26 +327,28 @@ UIGestureRecognizerDelegate>
                                 break;
                             }
                         }
-                     
+                        
                         // 更新数据源
                         self.selectArr = temp;
+                        
                         // 动画
                         [self.collectionView
                          performBatchUpdates:^{
-                            [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                            if (self.indexPath) {
+                                [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                            }
                         }
                          completion:^(BOOL finished) {
                             [self.collectionView reloadData];
-                            self.isChanged = NO;
                         }];
+                        // 新位置
+                        self.indexPath = new;
                     }
-                    // 新位置
-                    UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:new];
-                    cell.contentView.alpha = 0;
-                    self.indexPath = new;
+                    
                 } break;
                 case 1: { // 拖拽到下方
                     // 编辑数据源
+                    self.isChanged = YES;
                     // 取出
                     SHTagViewModel *data = self.selectArr[self.indexPath.row];
                     // 删除
@@ -362,26 +360,30 @@ UIGestureRecognizerDelegate>
                     if (self.indexPath.row == self.currentIndex) {
                         self.currentIndex--;
                     }
-                    press.state = UIGestureRecognizerStateEnded;
+                    
                     // 动画
                     [self.collectionView
                      performBatchUpdates:^{
-                        [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+                        if(self.indexPath){
+                            [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+                        }
                     }
                      completion:^(BOOL finished) {
-                        [self.collectionView reloadData];
+                        self.indexPath = nil;
                         self.isChanged = NO;
+                        [self.collectionView reloadData];
                     }];
+                    press.state = UIGestureRecognizerStateEnded;
                 } break;
                 default:
                     break;
             }
         } break;
         case UIGestureRecognizerStateEnded: {
-            self.indexPath = nil;
             [self.currentView removeFromSuperview];
-            //移动中的话不用刷新，因为有自己的动画刷新
-            if(!self.isChanged){
+            // 移动中的话不用刷新，因为有自己的动画刷新
+            if (!self.isChanged) {
+                self.indexPath = nil;
                 [self.collectionView reloadData];
             }
         } break;
@@ -408,6 +410,7 @@ UIGestureRecognizerDelegate>
     // 隐藏当前cell
     cell.contentView.alpha = 0;
     // 保存一下当前选中的名字，方便编辑完定位
+    self.currentIndex = MIN(self.currentIndex, self.selectArr.count - 1);
     self.currentName = [self.selectArr[self.currentIndex] name];
 }
 
@@ -440,13 +443,13 @@ UIGestureRecognizerDelegate>
 #pragma mark - 公开方法
 - (void)reloadView {
     [self layoutIfNeeded];
-    //布局
+    // 布局
     SHCollectionViewFlowLayout *layout = (SHCollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
     layout.alignment = self.alignment;
-    layout.sectionInset = UIEdgeInsetsMake(self.lineSpace - self.closeWH/2, self.space, self.lineSpace, self.space - self.closeWH/2);
-    layout.minimumLineSpacing = self.lineSpace - self.closeWH/2;
-    layout.minimumInteritemSpacing = self.space - self.closeWH/2;
-    //刷新
+    layout.sectionInset = UIEdgeInsetsMake(self.lineSpace - self.closeWH / 2, self.space, self.lineSpace, self.space - self.closeWH / 2);
+    layout.minimumLineSpacing = self.lineSpace - self.closeWH / 2;
+    layout.minimumInteritemSpacing = self.space - self.closeWH / 2;
+    // 刷新
     [self.collectionView reloadData];
 }
 
