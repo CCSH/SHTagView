@@ -339,16 +339,23 @@ UIGestureRecognizerDelegate>
                         // 更新数据源
                         self.selectArr = temp;
                         
-                        // 动画
-                        [self.collectionView
-                         performBatchUpdates:^{
-                            if (self.indexPath) {
-                                [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                        @try {
+                            // 动画
+                            [self.collectionView
+                             performBatchUpdates:^{
+                                if (self.indexPath) {
+                                    [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:new];
+                                }
                             }
-                        }
-                         completion:^(BOOL finished) {
+                             completion:^(BOOL finished) {
+                                [self.collectionView reloadData];
+                            }];
+                        } @catch (NSException *exception) {
                             [self.collectionView reloadData];
-                        }];
+                        } @finally {
+                            
+                        }
+
                         // 新位置
                         self.indexPath = new;
                     }
@@ -369,18 +376,28 @@ UIGestureRecognizerDelegate>
                         self.currentIndex--;
                     }
                     
-                    // 动画
-                    [self.collectionView
-                     performBatchUpdates:^{
-                        if(self.indexPath){
-                            [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+                    @try {
+                        
+                        // 动画
+                        [self.collectionView
+                         performBatchUpdates:^{
+                            if(self.indexPath){
+                                [self.collectionView moveItemAtIndexPath:self.indexPath toIndexPath:[NSIndexPath indexPathForItem:self.unSelectArr.count - 1 inSection:1]];
+                            }
                         }
-                    }
-                     completion:^(BOOL finished) {
+                         completion:^(BOOL finished) {
+                            self.indexPath = nil;
+                            self.isChanged = NO;
+                            [self.collectionView reloadData];
+                        }];
+                    } @catch (NSException *exception) {
                         self.indexPath = nil;
                         self.isChanged = NO;
                         [self.collectionView reloadData];
-                    }];
+                    } @finally {
+                        
+                    }
+            
                     press.state = UIGestureRecognizerStateEnded;
                 } break;
                 default:
